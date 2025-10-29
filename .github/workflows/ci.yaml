@@ -1,0 +1,30 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: [3.10, 3.11, 3.12]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install uv
+        run: pip install uv
+      - name: Setup venv & install deps
+        run: |
+          uv venv
+          source .venv/bin/activate
+          uv sync
+      - name: Run tests
+        run: |
+          source .venv/bin/activate
+          uv run pytest -q
+      - name: Lint
+        run: |
+          source .venv/bin/activate
+          uv run ruff check .

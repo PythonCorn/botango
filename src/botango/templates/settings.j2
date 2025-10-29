@@ -1,0 +1,31 @@
+# {{ path }}
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+class Settings(BaseSettings):
+    {% if env_data %}
+    {% for k, v in env_data.items() %}
+    {{ k }}: {{ v }}
+    {% endfor %}
+    {% endif %}
+    model_config = SettingsConfigDict(env_file="data/.env", env_file_encoding="utf-8")
+
+    {% if env_data and env_data.get("POSTGRES_USER", None) %}
+    @property
+    def url(self):
+        return (f"postgresql+asyncpg://"
+                f"{self.POSTGRES_USER}:"
+                f"{self.POSTGRES_PASSWORD}@"
+                f"{self.POSTGRES_HOST}:"
+                f"{self.POSTGRES_PORT}"
+                f"{self.POSTGRES_NAME}"
+                )
+    {% endif %}
+    {% if env_data and env_data.get("DATABASE_NAME", None) %}
+    @property
+    def url(self):
+        return f"sqlite+aiosqlite:///data/{self.DATABASE_NAME}"
+    {% endif %}
+
+
+settings = Settings()

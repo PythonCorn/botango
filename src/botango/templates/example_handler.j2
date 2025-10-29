@@ -1,0 +1,11 @@
+from aiogram import Router
+from aiogram.filters import CommandStart
+from aiogram.types import Message
+
+example_router = Router(name="example router")
+
+@example_router.message(CommandStart())
+async def hello_handler(message: Message):
+    await message.answer(
+        text="Hello from botango framework!!!"
+    )

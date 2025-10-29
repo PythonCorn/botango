@@ -1,7 +1,27 @@
 [project]
-name = "botango-pythoncorn"
+name = "botango"
 version = "0.1.0"
-description = "Add your description here"
+description = "CLI framework for create Telegram bots by aiogram"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+
+license = { text = "MIT" }
+authors = [{ name = "PythonCorn", email="PythonCorn@hotmail.com"}]
+
+dependencies = [
+    "aiogram>=3.22.0",
+    "click>=8.3.0",
+    "jinja2>=3.1.6",
+    "toml>=0.10.2",
+    "pydantic-settings>=2.11.0",
+]
+
+[project.urls]
+"Repository" = "https://github.com/PythonCorn/botango"
+
+[project.scripts]
+botango = "botango.cli:cli"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
