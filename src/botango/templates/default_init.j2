@@ -1,1 +1,7 @@
 # {{ path }}
+
+{% if imports %}
+{% for i in imports %}
+{{ i }}
+{% endfor %}
+{% endif %}

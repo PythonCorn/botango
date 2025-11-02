@@ -1,6 +1,6 @@
 import asyncio
 import sys
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Dict, Any
 
 import click
 from aiogram import Bot
@@ -14,7 +14,9 @@ PAYMENTS = ["cryptobot", "xrocket", "yoomoney"]
 
 class ProjectCli:
     def __init__(self):
-        self.data = {}
+        self._data = {}
+        self._model: Optional[ModelProject] = None
+        self._is_build: bool = False
 
     @staticmethod
     def _step(step: int):
@@ -42,14 +44,14 @@ class ProjectCli:
 
             username = asyncio.run(_validate_token())
 
-            self.data["BOT_TOKEN"] = token
-            self.data["BOT_USERNAME"] = username
-            self.data["BOT_URL"] = f"https://t.me/{username}"
+            self._data["BOT_TOKEN"] = token
+            self._data["BOT_USERNAME"] = username
+            self._data["BOT_URL"] = f"https://t.me/{username}"
 
             click.echo(
                 message=f"{self.style(text=f"✅ Токен бота валидный!!!\n", fg="green", bold=True)}"
                         f"{self.style(text="Username: ", fg="blue", bold=True)}"
-                        f"{self.style(text=f"@{self.data.get("BOT_USERNAME")}\n", fg="green", bold=True)}"
+                        f"{self.style(text=f"@{self._data.get("BOT_USERNAME")}\n", fg="green", bold=True)}"
             )
         except TokenValidationError as e:
             click.BadParameter(f"{e.args[0]}")
@@ -82,7 +84,7 @@ class ProjectCli:
             conn_type = self._many_variants(items)
 
         click.secho(f"✅ Вы выбрали: {conn_type}\n", fg="green", bold=True)
-        self.data[key.upper()] = conn_type
+        self._data[key.upper()] = conn_type
 
     def _one_variant(self, items):
         while True:
@@ -169,6 +171,8 @@ class ProjectCli:
                 items=DATABASES,
                 key="type_database"
             )
+        else:
+            self._data["TYPE_DATABASE"] = None
 
     def _get_payments(self):
         if self._bool_question(
@@ -182,6 +186,8 @@ class ProjectCli:
                 key="payments",
                 many=True
             )
+        else:
+            self._data["PAYMENTS"] = []
 
     def _get_docker_file(self):
         if self._bool_question(
@@ -189,7 +195,9 @@ class ProjectCli:
                 step=5,
                 default=False
         ):
-            self.data["DOCKER_FILE"] = True
+            self._data["DOCKER_FILE"] = True
+        else:
+            self._data["DOCKER_FILE"] = False
 
     def _get_docker_compose(self):
         if self._bool_question(
@@ -197,7 +205,9 @@ class ProjectCli:
                 step=6,
                 default=False
         ):
-            self.data["DOCKER_COMPOSE"] = True
+            self._data["DOCKER_COMPOSE"] = True
+        else:
+            self._data["DOCKER_COMPOSE"] = False
 
     def _get_github_actions(self):
         if self._bool_question(
@@ -205,9 +215,11 @@ class ProjectCli:
                 step=7,
                 default=False
         ):
-            self.data["GITHUB"] = True
+            self._data["GITHUB"] = True
+        else:
+            self._data["GITHUB"] = False
 
-    def build_project(self) -> ModelProject:
+    def build_project(self) -> None:
         self._get_token()
         self._get_type_connection()
         self._get_engine_database()
@@ -215,5 +227,19 @@ class ProjectCli:
         self._get_docker_file()
         self._get_docker_compose()
         self._get_github_actions()
-        return ModelProject(**self.data)
+        self._is_build = True
+        self._model = ModelProject(**self._data)
+
+    @property
+    def data(self) -> Dict[str, Any]:
+        if not self._is_build:
+            raise ValueError("Проект не собран!")
+        return self._data
+
+    @property
+    def model(self) -> ModelProject:
+        if not self._is_build:
+            raise ValueError("Проект не собран!")
+        return self._model
+
 

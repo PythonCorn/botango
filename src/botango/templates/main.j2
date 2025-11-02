@@ -1,0 +1,57 @@
+{# Получаем тип соединения один раз #}
+{% set conn_type = settings_data.get("CONNECTION_TYPE", "long_polling") %}
+from bot.handlers import example_router
+{# Импорты по типу соединения #}
+{% if conn_type == "long_polling" %}
+from botango.core.connection import LongPolling
+{% elif conn_type == "webhook" %}
+from botango.core.connection import WebhookBot
+{% elif conn_type == "ngrok" %}
+from botango.core.connection import NgrokWebhook
+{% endif %}
+
+from settings import settings
+
+{% if settings_data.get("CONNECTION_TYPE") == "long_polling" %}
+app = LongPolling(
+    token=settings.BOT_TOKEN,
+    # Здесь вы можете перечислить необходимые события, которые будет обрабатывать бот.
+    allowed_updates=["message", "callback_query"]
+)
+{% endif %}
+{% if settings_data.get("CONNECTION_TYPE") == "webhook" %}
+app = WebhookBot(
+    token=settings.BOT_TOKEN,
+    base_url=settings.BASE_URL,
+    webhook_secret=settings.WEBHOOK_SECRET,
+    webhook_path=settings.WEBHOOK_PATH,
+    # Здесь вы можете перечислить необходимые события, которые будет обрабатывать бот.
+    allowed_updates=["message", "callback_query"]
+)
+{% endif %}
+{% if settings_data.get("CONNECTION_TYPE") == "ngrok" %}
+app = NgrokWebhook(
+    token=settings.BOT_TOKEN,
+    webhook_secret=settings.WEBHOOK_SECRET,
+    webhook_path=settings.WEBHOOK_PATH,
+    # ngrok_token=settings.NGROK_TOKEN, # Если токен уже есть в Ngrok, то можно ставить None
+    ngrok_port=8000,
+    # Здесь вы можете перечислить необходимые события, которые будет обрабатывать бот.
+    allowed_updates=["message", "callback_query"]
+)
+{% endif %}
+
+"""Подключение необходимых роутеров"""
+app.include_routers(example_router)
+
+"""Подключение необходимых middleware"""
+# app.add_middleware(YourMiddleware(), "message", "callback_query")
+
+"""Bot"""
+# bot = app.bot
+
+"""Dispatcher"""
+# dp = app.dispatcher
+
+if __name__ == '__main__':
+    app.run_polling(drop_pending_updates=True)

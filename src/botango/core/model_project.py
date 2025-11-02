@@ -1,6 +1,7 @@
+import sys
 from dataclasses import dataclass
 import subprocess
-from typing import List, Optional, Set
+from typing import List, Optional, Set, Literal
 from importlib.metadata import distributions
 
 import click
@@ -79,7 +80,7 @@ class ModelProject(BaseModel):
                 to_install.append(p)
         return to_install
 
-    def install_packages(self, dry_run: bool = True, upgrade: bool = False) -> None:
+    def install_packages(self, dry_run: bool = True, upgrade: bool = False, installer: Literal['pip', 'uv'] = 'pip') -> None:
         """
         Устанавливает отсутствующие пакеты.
         По умолчанию dry_run=True — просто печатает, что будет сделано.
@@ -92,7 +93,10 @@ class ModelProject(BaseModel):
 
         for p in not_installed:
             spec = f"{p.package_name}=={p.version}"
-            cmd = ["uv", "add", spec]
+            if installer == "uv":
+                cmd = ["uv", "add", spec]
+            else:
+                cmd = [sys.executable, "-m", "pip", "install", spec]
             if upgrade:
                 cmd.append("--upgrade")
             if dry_run:

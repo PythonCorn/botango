@@ -1,6 +1,6 @@
 import click
 
-from botango.core.project_cli import ProjectCli
+from botango.utils.file_creator import FileCreator
 
 
 @click.group()
@@ -10,5 +10,5 @@ def cli():
 @cli.command()
 def init():
     """Запуск построения схемы приложения"""
-    model = ProjectCli().build_project()
-    print(model.install_packages(dry_run=False))
+    creator = FileCreator()
+    creator.create()
