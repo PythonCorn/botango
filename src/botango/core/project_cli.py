@@ -1,19 +1,18 @@
 import asyncio
 import sys
-from typing import List, Optional
+from typing import List, Optional, Union
 
 import click
 from aiogram import Bot
 from aiogram.utils.token import TokenValidationError
 
+from botango.core.model_project import ModelProject
+
 CONNECTIONS = ["long_polling", "webhook", "ngrok"]
 DATABASES = ["aiosqlite", "postgres"]
 PAYMENTS = ["cryptobot", "xrocket", "yoomoney"]
 
-
-
-
-class ProjectBuilder:
+class ProjectCli:
     def __init__(self):
         self.data = {}
 
@@ -50,7 +49,7 @@ class ProjectBuilder:
             click.echo(
                 message=f"{self.style(text=f"✅ Токен бота валидный!!!\n", fg="green", bold=True)}"
                         f"{self.style(text="Username: ", fg="blue", bold=True)}"
-                        f"{self.style(text=f"@{self.data.get("BOT_USERNAME")}", fg="green", bold=True)}"
+                        f"{self.style(text=f"@{self.data.get("BOT_USERNAME")}\n", fg="green", bold=True)}"
             )
         except TokenValidationError as e:
             click.BadParameter(f"{e.args[0]}")
@@ -108,10 +107,10 @@ class ProjectBuilder:
         variants = []
         while True:
             try:
-                choice: str = click.prompt(
+                choice: Union[str, int] = click.prompt(
                     text=self.style("Введите номер варианта (можно несколько через пробел). По умолчанию", fg="green", bold=True),
                     type=str,
-                    default="1",
+                    default=1,
                     show_default=True
                 )
                 if choice == "None":
@@ -119,7 +118,7 @@ class ProjectBuilder:
 
                 if isinstance(choice, int):
                     if 1 <= choice <= len(items):
-                        conn_type = items[choice - 1]  # type: ignore
+                        conn_type: int = items[choice - 1]  # type: ignore
                         return [items[conn_type]]
 
                 parts = choice.split()
@@ -187,25 +186,28 @@ class ProjectBuilder:
     def _get_docker_file(self):
         if self._bool_question(
                 text="Добавить DockerFile?",
-                step=5
+                step=5,
+                default=False
         ):
             self.data["DOCKER_FILE"] = True
 
     def _get_docker_compose(self):
         if self._bool_question(
                 text="Добавить docker-compose.yaml?",
-                step=6
+                step=6,
+                default=False
         ):
             self.data["DOCKER_COMPOSE"] = True
 
     def _get_github_actions(self):
         if self._bool_question(
                 text="Добавить папку .github для CI/CD?",
-                step=7
+                step=7,
+                default=False
         ):
             self.data["GITHUB"] = True
 
-    def build_project(self):
+    def build_project(self) -> ModelProject:
         self._get_token()
         self._get_type_connection()
         self._get_engine_database()
@@ -213,5 +215,5 @@ class ProjectBuilder:
         self._get_docker_file()
         self._get_docker_compose()
         self._get_github_actions()
-
+        return ModelProject(**self.data)
 
