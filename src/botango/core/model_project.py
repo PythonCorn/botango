@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 import subprocess
-import sys
 from typing import List, Optional, Set
 from importlib.metadata import distributions
 
